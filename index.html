@@ -4,27 +4,37 @@
     <meta charset="UTF-8" />
     <title>$COOK Staking</title>
     <script>
-      // Dynamically load the thirdweb script
+      // Dynamically load the thirdweb staking widget
       const script = document.createElement("script");
-      script.src = "https://sdk.thirdweb.com/widgets/staking";
+      script.src = "https://widgets.thirdweb.com/staking/latest.js";
       script.onload = () => {
-        // Render once the thirdweb widget is ready
-        thirdweb.widgets.Staking.render("#thirdweb-staking", {
-          contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
-          chain: "base", // or "ethereum", "polygon", etc.
-        });
+        if (window.thirdweb?.widgets?.Staking) {
+          window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
+            contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
+            chain: "base",
+          });
+        } else {
+          console.error("Thirdweb staking widget failed to load.");
+        }
       };
       document.head.appendChild(script);
     </script>
     <style>
       body {
         margin: 0;
-        font-family: Arial, sans-serif;
-        background-color: #f7f7f7;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fff7ec;
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
         height: 100vh;
+        padding: 20px;
+      }
+
+      #nft-image {
+        width: 200px;
+        margin-bottom: 20px;
       }
 
       #thirdweb-staking {
@@ -34,6 +44,10 @@
     </style>
   </head>
   <body>
+    <!-- NFT Image (add this to your /public folder as cookiehead_chef.png) -->
+    <img id="nft-image" src="/cookiehead_chef.png" alt="COOK NFT" />
+
+    <!-- Thirdweb staking UI -->
     <div id="thirdweb-staking"></div>
   </body>
 </html>
