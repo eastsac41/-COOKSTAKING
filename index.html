@@ -1,105 +1,152 @@
-import React, { useEffect, useState } from "react";
-import {
-  createThirdwebClient,
-  getContract,
-  prepareContractCall,
-  sendTransaction,
-  readContract,
-} from "thirdweb";
-import { defineChain } from "thirdweb/chains";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>$COOK Token Staking</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@thirdweb-dev/sdk@3.7.0/dist/browser/thirdweb.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff6ea;
+      padding: 20px;
+      max-width: 480px;
+      margin: auto;
+    }
+    h1 {
+      color: #d35400;
+    }
+    input {
+      width: 200px;
+      padding: 6px;
+      margin: 8px 0;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>$COOK Token Staking</h1>
+  
+  <button id="connectWallet">Connect Wallet</button>
+  <p id="account"></p>
 
-const client = createThirdwebClient({ clientId: "b2f0efa779d1c21ac55d26906bc544ae" });
+  <input type="number" id="amount" placeholder="Amount to stake/unstake" min="0" step="any" />
+  <br />
+  <button id="stakeBtn">Stake</button>
+  <button id="unstakeBtn">Unstake</button>
+  <button id="claimBtn">Claim Rewards</button>
 
-const chain = defineChain(8453); // Base Mainnet
-const stakingAddress = "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd";
+  <p><button id="checkStakeBtn">Check Staked Amount</button></p>
+  <p id="stakedAmount">Staked: 0</p>
+  <p id="status"></p>
 
-export default function App() {
-  const [account, setAccount] = useState(null);
-  const [contract, setContract] = useState(null);
-  const [amount, setAmount] = useState("0");
-  const [staked, setStaked] = useState("0");
+<script>
+  (async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    let signer;
+    let contract;
 
-  // Connect wallet
-  const connect = async () => {
-    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-    setAccount(accounts[0]);
-  };
+    const stakingAddress = "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd";
 
-  // Load contract
-  useEffect(() => {
-    const c = getContract({ client, chain, address: stakingAddress });
-    setContract(c);
-  }, []);
+    // Minimal ABI for the contract methods we use:
+    const abi = [
+      "function stake(uint256 amount) external",
+      "function withdraw(uint256 amount) external",
+      "function claimRewards() external",
+      "function getStake(address user) view returns (uint256)"
+    ];
 
-  // Load current staked amount
-  const loadStaked = async () => {
-    const result = await readContract({
-      contract,
-      method: "function getStake(address)",
-      params: [account],
-    });
-    setStaked(result.toString());
-  };
+    const connectWalletBtn = document.getElementById("connectWallet");
+    const accountDisplay = document.getElementById("account");
+    const amountInput = document.getElementById("amount");
+    const stakeBtn = document.getElementById("stakeBtn");
+    const unstakeBtn = document.getElementById("unstakeBtn");
+    const claimBtn = document.getElementById("claimBtn");
+    const checkStakeBtn = document.getElementById("checkStakeBtn");
+    const stakedAmountDisplay = document.getElementById("stakedAmount");
+    const statusDisplay = document.getElementById("status");
 
-  // Stake tokens
-  const handleStake = async () => {
-    const tx = await prepareContractCall({
-      contract,
-      method: "function stake(uint256)",
-      params: [BigInt(amount)],
-    });
-    await sendTransaction({ transaction: tx, account });
-    loadStaked();
-  };
+    async function connectWallet() {
+      try {
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        accountDisplay.textContent = "Connected: " + address;
+        contract = new ethers.Contract(stakingAddress, abi, signer);
+        statusDisplay.textContent = "Wallet connected, ready!";
+      } catch (e) {
+        statusDisplay.textContent = "Wallet connection failed: " + e.message;
+      }
+    }
 
-  // Unstake tokens
-  const handleUnstake = async () => {
-    const tx = await prepareContractCall({
-      contract,
-      method: "function withdraw(uint256)",
-      params: [BigInt(amount)],
-    });
-    await sendTransaction({ transaction: tx, account });
-    loadStaked();
-  };
+    async function stake() {
+      if (!contract) return alert("Connect wallet first");
+      const amount = amountInput.value;
+      if (!amount || amount <= 0) return alert("Enter valid amount");
+      try {
+        statusDisplay.textContent = "Sending stake transaction...";
+        const tx = await contract.stake(ethers.parseUnits(amount, 18));
+        await tx.wait();
+        statusDisplay.textContent = "Stake successful!";
+      } catch (e) {
+        statusDisplay.textContent = "Stake failed: " + e.message;
+      }
+    }
 
-  // Claim rewards
-  const handleClaim = async () => {
-    const tx = await prepareContractCall({
-      contract,
-      method: "function claimRewards()",
-      params: [],
-    });
-    await sendTransaction({ transaction: tx, account });
-  };
+    async function unstake() {
+      if (!contract) return alert("Connect wallet first");
+      const amount = amountInput.value;
+      if (!amount || amount <= 0) return alert("Enter valid amount");
+      try {
+        statusDisplay.textContent = "Sending unstake transaction...";
+        const tx = await contract.withdraw(ethers.parseUnits(amount, 18));
+        await tx.wait();
+        statusDisplay.textContent = "Unstake successful!";
+      } catch (e) {
+        statusDisplay.textContent = "Unstake failed: " + e.message;
+      }
+    }
 
-  return (
-    <div style={{ padding: 30, fontFamily: "Arial", backgroundColor: "#fff6ea", minHeight: "100vh" }}>
-      <h1>$COOK Token Staking</h1>
+    async function claimRewards() {
+      if (!contract) return alert("Connect wallet first");
+      try {
+        statusDisplay.textContent = "Sending claim rewards transaction...";
+        const tx = await contract.claimRewards();
+        await tx.wait();
+        statusDisplay.textContent = "Rewards claimed!";
+      } catch (e) {
+        statusDisplay.textContent = "Claim failed: " + e.message;
+      }
+    }
 
-      {!account ? (
-        <button onClick={connect}>Connect Wallet</button>
-      ) : (
-        <p>Connected: {account}</p>
-      )}
+    async function checkStakedAmount() {
+      if (!contract) return alert("Connect wallet first");
+      try {
+        const address = await signer.getAddress();
+        const staked = await contract.getStake(address);
+        stakedAmountDisplay.textContent = "Staked: " + ethers.formatUnits(staked, 18);
+      } catch (e) {
+        statusDisplay.textContent = "Failed to get staked amount: " + e.message;
+      }
+    }
 
-      <div style={{ marginTop: 20 }}>
-        <input
-          type="text"
-          placeholder="Amount to stake"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-        <br />
-        <button onClick={handleStake}>Stake</button>
-        <button onClick={handleUnstake}>Unstake</button>
-        <button onClick={handleClaim}>Claim Rewards</button>
-      </div>
+    connectWalletBtn.onclick = connectWallet;
+    stakeBtn.onclick = stake;
+    unstakeBtn.onclick = unstake;
+    claimBtn.onclick = claimRewards;
+    checkStakeBtn.onclick = checkStakedAmount;
+  })();
+</script>
 
-      <div style={{ marginTop: 20 }}>
-        <button onClick={loadStaked}>Check Staked Amount</button>
-        <p>Currently Staked: {staked}</p>
-      </div>
-    </div>
-  );
+</body>
+</html>
+
 }
