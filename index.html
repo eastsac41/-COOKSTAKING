@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>$COOK Token Staking</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@thirdweb-dev/sdk@3.7.0/dist/browser/thirdweb.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,10 +22,10 @@
     }
     button {
       padding: 10px 15px;
-      margin: 5px;
+      margin: 5px 5px 10px 0;
       cursor: pointer;
     }
-    #status {
+    #status, #approveStatus {
       margin-top: 10px;
       font-weight: bold;
     }
@@ -40,12 +39,17 @@
 
   <input type="number" id="amount" placeholder="Amount to stake/unstake" min="0" step="any" />
   <br />
+
+  <button id="approveBtn">Approve Staking Contract</button>
+  <p id="approveStatus"></p>
+
   <button id="stakeBtn">Stake</button>
   <button id="unstakeBtn">Unstake</button>
   <button id="claimBtn">Claim Rewards</button>
 
   <p><button id="checkStakeBtn">Check Staked Amount</button></p>
   <p id="stakedAmount">Staked: 0</p>
+  
   <p id="status"></p>
 
 <script>
@@ -53,20 +57,28 @@
     const provider = new ethers.BrowserProvider(window.ethereum);
     let signer;
     let contract;
+    let tokenContract;
 
     const stakingAddress = "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd";
+    const tokenAddress = "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd"; // Same address if $COOK token is the contract? Confirm this!
 
-    // Minimal ABI for the contract methods we use:
-    const abi = [
+    const stakingAbi = [
       "function stake(uint256 amount) external",
       "function withdraw(uint256 amount) external",
       "function claimRewards() external",
       "function getStake(address user) view returns (uint256)"
     ];
+    const tokenAbi = [
+      "function approve(address spender, uint256 amount) external returns (bool)",
+      "function allowance(address owner, address spender) view returns (uint256)",
+      "function decimals() view returns (uint8)"
+    ];
 
     const connectWalletBtn = document.getElementById("connectWallet");
     const accountDisplay = document.getElementById("account");
     const amountInput = document.getElementById("amount");
+    const approveBtn = document.getElementById("approveBtn");
+    const approveStatus = document.getElementById("approveStatus");
     const stakeBtn = document.getElementById("stakeBtn");
     const unstakeBtn = document.getElementById("unstakeBtn");
     const claimBtn = document.getElementById("claimBtn");
@@ -74,16 +86,43 @@
     const stakedAmountDisplay = document.getElementById("stakedAmount");
     const statusDisplay = document.getElementById("status");
 
+    let decimals = 18;
+
+    async function setupTokenContract() {
+      tokenContract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+      try {
+        decimals = await tokenContract.decimals();
+      } catch {
+        decimals = 18;
+      }
+    }
+
     async function connectWallet() {
       try {
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         const address = await signer.getAddress();
         accountDisplay.textContent = "Connected: " + address;
-        contract = new ethers.Contract(stakingAddress, abi, signer);
+        contract = new ethers.Contract(stakingAddress, stakingAbi, signer);
+        await setupTokenContract();
         statusDisplay.textContent = "Wallet connected, ready!";
       } catch (e) {
         statusDisplay.textContent = "Wallet connection failed: " + e.message;
+      }
+    }
+
+    async function approveTokens() {
+      if (!tokenContract) return alert("Connect wallet first");
+      const amount = amountInput.value;
+      if (!amount || amount <= 0) return alert("Enter valid amount");
+      try {
+        approveStatus.textContent = "Sending approval transaction...";
+        const amountBn = ethers.parseUnits(amount, decimals);
+        const tx = await tokenContract.approve(stakingAddress, amountBn);
+        await tx.wait();
+        approveStatus.textContent = "Approval successful!";
+      } catch (e) {
+        approveStatus.textContent = "Approval failed: " + e.message;
       }
     }
 
@@ -93,7 +132,8 @@
       if (!amount || amount <= 0) return alert("Enter valid amount");
       try {
         statusDisplay.textContent = "Sending stake transaction...";
-        const tx = await contract.stake(ethers.parseUnits(amount, 18));
+        const amountBn = ethers.parseUnits(amount, decimals);
+        const tx = await contract.stake(amountBn);
         await tx.wait();
         statusDisplay.textContent = "Stake successful!";
       } catch (e) {
@@ -107,7 +147,8 @@
       if (!amount || amount <= 0) return alert("Enter valid amount");
       try {
         statusDisplay.textContent = "Sending unstake transaction...";
-        const tx = await contract.withdraw(ethers.parseUnits(amount, 18));
+        const amountBn = ethers.parseUnits(amount, decimals);
+        const tx = await contract.withdraw(amountBn);
         await tx.wait();
         statusDisplay.textContent = "Unstake successful!";
       } catch (e) {
@@ -132,21 +173,21 @@
       try {
         const address = await signer.getAddress();
         const staked = await contract.getStake(address);
-        stakedAmountDisplay.textContent = "Staked: " + ethers.formatUnits(staked, 18);
+        stakedAmountDisplay.textContent = "Staked: " + ethers.formatUnits(staked, decimals);
       } catch (e) {
         statusDisplay.textContent = "Failed to get staked amount: " + e.message;
       }
     }
 
     connectWalletBtn.onclick = connectWallet;
+    approveBtn.onclick = approveTokens;
     stakeBtn.onclick = stake;
     unstakeBtn.onclick = unstake;
     claimBtn.onclick = claimRewards;
     checkStakeBtn.onclick = checkStakedAmount;
+
   })();
 </script>
 
 </body>
 </html>
-
-}
