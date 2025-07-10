@@ -4,11 +4,6 @@
     <meta charset="UTF-8" />
     <title>$COOK Staking</title>
 
-    <!-- Load Wallet Connect SDK -->
-    <script src="https://sdk.thirdweb.com/connect/latest.js"></script>
-    <!-- Load Staking Widget SDK -->
-    <script src="https://widgets.thirdweb.com/staking/latest.js"></script>
-
     <style>
       body {
         margin: 0;
@@ -45,41 +40,46 @@
     </style>
   </head>
   <body>
-    <!-- Page Title -->
     <h1>$COOK Staking</h1>
-
-    <!-- NFT Image -->
     <img id="nft-image" src="/cookiehead_chef.png" alt="COOK NFT" />
-
-    <!-- Wallet Connect Button -->
     <div id="wallet-connect"></div>
-
-    <!-- Thirdweb Staking Widget -->
     <div id="thirdweb-staking"></div>
 
+    <!-- Load scripts dynamically and wait until BOTH are ready -->
     <script>
-      // Wait for page to fully load
-      window.addEventListener("load", () => {
-        // Render the Connect Wallet button
-        if (window.thirdweb?.connect?.renderWalletConnect) {
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      async function initThirdweb() {
+        try {
+          // Load both required scripts
+          await loadScript("https://sdk.thirdweb.com/connect/latest.js");
+          await loadScript("https://widgets.thirdweb.com/staking/latest.js");
+
+          // Now that both are loaded, render wallet + staking
           window.thirdweb.connect.renderWalletConnect("#wallet-connect", {
             theme: "light",
             compact: false,
           });
-        } else {
-          console.error("Thirdweb Connect failed to load.");
-        }
 
-        // Render the Staking Widget
-        if (window.thirdweb?.widgets?.Staking) {
           window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
             contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
-            chain: "base", // important: staking contract must be deployed on Base
+            chain: "base",
           });
-        } else {
-          console.error("Thirdweb Staking widget failed to load.");
+        } catch (err) {
+          console.error("Error loading Thirdweb scripts:", err);
         }
-      });
+      }
+
+      // Start after page loads
+      window.addEventListener("load", initThirdweb);
     </script>
   </body>
 </html>
