@@ -3,36 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <title>$COOK Staking</title>
+    <script src="https://widgets.thirdweb.com/staking/latest.js"></script>
+    <script src="https://sdk.thirdweb.com/connect/latest.js"></script>
 
     <style>
       body {
         margin: 0;
         padding: 20px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Segoe UI', sans-serif;
         background-color: #fff6ea;
         display: flex;
         flex-direction: column;
         align-items: center;
         min-height: 100vh;
       }
-
       h1 {
-        font-size: 2rem;
-        margin-bottom: 10px;
         color: #d35400;
+        margin: 20px 0 10px;
       }
-
       #nft-image {
-        width: 200px;
+        width: 180px;
         margin-bottom: 20px;
-        border-radius: 12px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
       }
-
       #wallet-connect {
         margin-bottom: 30px;
       }
-
       #thirdweb-staking {
         width: 100%;
         max-width: 500px;
@@ -45,41 +40,23 @@
     <div id="wallet-connect"></div>
     <div id="thirdweb-staking"></div>
 
-    <!-- Load scripts dynamically and wait until BOTH are ready -->
     <script>
-      function loadScript(src) {
-        return new Promise((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
+      async function initThirdweb() {
+        // Wait for both scripts to load
+        await new Promise(resolve => window.addEventListener("load", resolve));
+
+        window.thirdweb.connect.renderWalletConnect("#wallet-connect", {
+          theme: "light",
+          compact: false,
+        });
+
+        window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
+          contractAddress: "YOUR_STAKING_CONTRACT", // 👈 paste here
+          chain: "base",
         });
       }
 
-      async function initThirdweb() {
-        try {
-          // Load both required scripts
-          await loadScript("https://sdk.thirdweb.com/connect/latest.js");
-          await loadScript("https://widgets.thirdweb.com/staking/latest.js");
-
-          // Now that both are loaded, render wallet + staking
-          window.thirdweb.connect.renderWalletConnect("#wallet-connect", {
-            theme: "light",
-            compact: false,
-          });
-
-          window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
-            contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
-            chain: "base",
-          });
-        } catch (err) {
-          console.error("Error loading Thirdweb scripts:", err);
-        }
-      }
-
-      // Start after page loads
-      window.addEventListener("load", initThirdweb);
+      initThirdweb();
     </script>
   </body>
 </html>
