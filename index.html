@@ -1,51 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>$COOK Staking</title>
-  <script src="https://sdk.thirdweb.com/embed.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f2f2f2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 2rem;
-    }
-    h1 {
-      color: #333;
-      margin-bottom: 1rem;
-    }
-    #thirdweb-staking {
-      width: 100%;
-      max-width: 500px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Stake $COOK → Earn ETH</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <title>$COOK Staking</title>
+    <script>
+      // Dynamically load the thirdweb script
+      const script = document.createElement("script");
+      script.src = "https://sdk.thirdweb.com/widgets/staking";
+      script.onload = () => {
+        // Render once the thirdweb widget is ready
+        thirdweb.widgets.Staking.render("#thirdweb-staking", {
+          contractAddress: "YOUR_STAKING_CONTRACT_ADDRESS",
+          chain: "base", // or "ethereum", "polygon", etc.
+        });
+      };
+      document.head.appendChild(script);
+    </script>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
 
-  <div
-    id="thirdweb-staking"
-    data-contract-address="0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd"
-    data-chain-id="8453"  <!-- Base Mainnet -->
-    data-theme="light"
-    data-primary-color="#3498db"
-  ></div>
-
-  <script>
-    window.addEventListener("load", () => {
-      thirdweb.widgets.Staking.render("#thirdweb-staking", {
-        contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
-        chainId: 8453,
-        theme: "light",
-        primaryColor: "#3498db"
-      });
-    });
-  </script>
-</body>
+      #thirdweb-staking {
+        width: 100%;
+        max-width: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="thirdweb-staking"></div>
+  </body>
 </html>
