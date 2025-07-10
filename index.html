@@ -3,38 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <title>$COOK Staking</title>
-    <script>
-      // Dynamically load the thirdweb staking widget
-      const script = document.createElement("script");
-      script.src = "https://widgets.thirdweb.com/staking/latest.js";
-      script.onload = () => {
-        if (window.thirdweb?.widgets?.Staking) {
-          window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
-            contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
-            chain: "base",
-          });
-        } else {
-          console.error("Thirdweb staking widget failed to load.");
-        }
-      };
-      document.head.appendChild(script);
-    </script>
+    <!-- Load Thirdweb's Connect SDK -->
+    <script src="https://sdk.thirdweb.com/connect/latest.js"></script>
+    <!-- Load Thirdweb's Staking Widget -->
+    <script src="https://widgets.thirdweb.com/staking/latest.js"></script>
+
     <style>
       body {
         margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #fff7ec;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        height: 100vh;
         padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fff6ea;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #d35400;
       }
 
       #nft-image {
         width: 200px;
         margin-bottom: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+      }
+
+      #wallet-connect {
+        margin-bottom: 30px;
       }
 
       #thirdweb-staking {
@@ -44,10 +44,30 @@
     </style>
   </head>
   <body>
-    <!-- NFT Image (add this to your /public folder as cookiehead_chef.png) -->
+    <!-- Page Title -->
+    <h1>$COOK Staking</h1>
+
+    <!-- NFT Image -->
     <img id="nft-image" src="/cookiehead_chef.png" alt="COOK NFT" />
 
-    <!-- Thirdweb staking UI -->
+    <!-- Wallet Connect Button -->
+    <div id="wallet-connect"></div>
+
+    <!-- Thirdweb Staking Widget -->
     <div id="thirdweb-staking"></div>
+
+    <script>
+      // Render the Connect Wallet Button
+      window.thirdweb.connect.renderWalletConnect("#wallet-connect", {
+        theme: "light",
+        compact: false,
+      });
+
+      // Render the staking widget
+      window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
+        contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
+        chain: "base",
+      });
+    </script>
   </body>
 </html>
