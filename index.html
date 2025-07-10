@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>$COOK Staking</title>
-    <!-- Load Thirdweb's Connect SDK -->
+
+    <!-- Load Wallet Connect SDK -->
     <script src="https://sdk.thirdweb.com/connect/latest.js"></script>
-    <!-- Load Thirdweb's Staking Widget -->
+    <!-- Load Staking Widget SDK -->
     <script src="https://widgets.thirdweb.com/staking/latest.js"></script>
 
     <style>
@@ -57,16 +58,27 @@
     <div id="thirdweb-staking"></div>
 
     <script>
-      // Render the Connect Wallet Button
-      window.thirdweb.connect.renderWalletConnect("#wallet-connect", {
-        theme: "light",
-        compact: false,
-      });
+      // Wait for page to fully load
+      window.addEventListener("load", () => {
+        // Render the Connect Wallet button
+        if (window.thirdweb?.connect?.renderWalletConnect) {
+          window.thirdweb.connect.renderWalletConnect("#wallet-connect", {
+            theme: "light",
+            compact: false,
+          });
+        } else {
+          console.error("Thirdweb Connect failed to load.");
+        }
 
-      // Render the staking widget
-      window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
-        contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
-        chain: "base",
+        // Render the Staking Widget
+        if (window.thirdweb?.widgets?.Staking) {
+          window.thirdweb.widgets.Staking.render("#thirdweb-staking", {
+            contractAddress: "0xcd6981Eff6c34e6efADf98f2bd656E0fBf2ac0Bd",
+            chain: "base", // important: staking contract must be deployed on Base
+          });
+        } else {
+          console.error("Thirdweb Staking widget failed to load.");
+        }
       });
     </script>
   </body>
