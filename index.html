@@ -1,4 +1,35 @@
 <!DOCTYPE html>
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import {
+  ThirdwebProvider,
+  metamaskWallet,
+  coinbaseWallet,
+  walletConnect,
+  embeddedWallet,
+} from "@thirdweb-dev/react";
+
+const clientId = "b2f0efa779d1c21ac55d26906bc544ae";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <React.StrictMode>
+    <ThirdwebProvider
+      clientId={clientId}
+      activeChain="base"
+      supportedWallets={[
+        metamaskWallet(),
+        coinbaseWallet(),
+        walletConnect(),
+        embeddedWallet(),
+      ]}
+    >
+      <App />
+    </ThirdwebProvider>
+  </React.StrictMode>
+);
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
